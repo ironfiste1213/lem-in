@@ -8,7 +8,7 @@ import (
 	"strconv"
 	"strings"
 
-	"lem-in/internal/models" // This uses a relative import path
+	"mimo/internal/models" // This uses a relative import path
 )
 
 // Various error types for specific parsing errors

@@ -1,4 +1,4 @@
-package main
+package output
 
 import (
 	"fmt"
@@ -57,7 +57,7 @@ func assignAntsSmart(farm *models.AntFarm, paths []*models.Path) []*SimAnt {
 }
 
 // Simulate ants moving along the selected paths
-func simulateAntsSmart(farm *models.AntFarm, paths []*models.Path) {
+func SimulateAntsSmart(farm *models.AntFarm, paths []*models.Path) {
 	if len(paths) == 0 {
 		fmt.Println("No paths available!")
 		return

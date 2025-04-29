@@ -1,7 +1,6 @@
 package algo
 
 import (
-	
 	"mimo/internal/models" // adjust this to your real import path
 	"sort"
 )
@@ -121,7 +120,7 @@ func calculateTurns(antCount int, paths []*models.Path) int {
 	// While ants are not all assigned
 	for extraAnts > 0 {
 		turns++
-		for _, path := range paths {
+		for range paths {
 			if extraAnts > 0 {
 				extraAnts--
 			}
@@ -132,20 +131,19 @@ func calculateTurns(antCount int, paths []*models.Path) int {
 	return turns + paths[len(paths)-1].Length - 1
 }
 
-func findBestGroup(antCount int, allPaths []*models.Path) []*models.Path {
-    groups := buildDisjointGroups(allPaths)
+func FindBestGroup(antCount int, allPaths []*models.Path) []*models.Path {
+	groups := buildDisjointGroups(allPaths)
 
-    var bestGroup []*models.Path
-    bestTurns := 1e9
+	var bestGroup []*models.Path
+	bestTurns := 1e9
 
-    for _, group := range groups {
-        turns := calculateTurns(antCount, group)
-        if float64(turns) < bestTurns {
-            bestTurns = float64(turns)
-            bestGroup = group
-        }
-    }
+	for _, group := range groups {
+		turns := calculateTurns(antCount, group)
+		if float64(turns) < bestTurns {
+			bestTurns = float64(turns)
+			bestGroup = group
+		}
+	}
 
-    return bestGroup
+	return bestGroup
 }
-

@@ -4,7 +4,8 @@ import (
 	"fmt"
 	"os"
 
-	"mimo/internal/algorithm"
+	 "mimo/internal/algorithm"
+	"mimo/internal/models"
 	"mimo/internal/output"
 	"mimo/internal/parser"
 )
@@ -30,26 +31,34 @@ func main() {
 		os.Exit(1)
 	}
 
-	// 2. Find all paths
-	allPaths := algo.FindAllPaths(farm)
-	if len(allPaths) == 0 {
-		fmt.Fprintln(os.Stderr, "Error: No paths found from start to end")
-		os.Exit(1)
+	var selectedPaths []*models.Path
+
+	// 2. Use optimized pathfinding for large graphs
+	if len(farm.Rooms) > 200 {
+		selectedPaths = algo.FindKDisjointPaths(farm, 10) // limit to 10 paths
+		if len(selectedPaths) == 0 {
+			fmt.Fprintln(os.Stderr, "Error: No paths found from start to end")
+			os.Exit(1)
+		}
+	} else {
+		allPaths := algo.FindAllPaths(farm)
+		if len(allPaths) == 0 {
+			fmt.Fprintln(os.Stderr, "Error: No paths found from start to end")
+			os.Exit(1)
+		}
+		selectedPaths = algo.FindBestGroup(farm.AntCount, allPaths)
+		if len(selectedPaths) == 0 {
+			fmt.Fprintln(os.Stderr, "Error: No valid group of paths found")
+			os.Exit(1)
+		}
 	}
 
-	// 3. Find the best group of paths
-	bestGroup := algo.FindBestGroup(farm.AntCount, allPaths)
-	if len(bestGroup) == 0 {
-		fmt.Fprintln(os.Stderr, "Error: No valid group of paths found")
-		os.Exit(1)
-	}
-
-	// 4. Output original input (mandatory for lem-in project)
+	// 3. Output original input (mandatory for lem-in project)
 	for _, line := range farm.Input {
 		fmt.Println(line)
 	}
 	fmt.Println()
 
-	// 5. Simulate ants moving
-	output.SimulateAntsSmart(farm, bestGroup)
+	// 4. Simulate ants moving
+	output.SimulateAntsSmart(farm, selectedPaths)
 }

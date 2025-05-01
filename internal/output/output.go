@@ -69,37 +69,24 @@ func SimulateAntsSmart(farm *models.AntFarm, paths []*models.Path) {
 		moveLine := ""
 		occupied := make(map[string]bool)
 
-		// Mark rooms currently occupied (not Start or End)
+		// Move ants already walking
 		for _, ant := range movingAnts {
-			if !ant.Finished && ant.Step > 0 && ant.Step < len(ant.Path)-1 {
-				occupied[ant.Path[ant.Step].Name] = true
-			}
-		}
-
-		newMovingAnts := []*SimAnt{}
-
-		// 🚀 First move ants already on paths
-		for _, ant := range movingAnts {
-			if ant.Finished {
-				continue
-			}
-
-			nextRoom := ant.Path[ant.Step+1]
-			if nextRoom.IsEnd || !occupied[nextRoom.Name] {
-				ant.Step++
-				moveLine += fmt.Sprintf("L%d-%s ", ant.ID, nextRoom.Name)
-				if nextRoom.IsEnd {
-					ant.Finished = true
-				} else {
-					occupied[nextRoom.Name] = true
-					newMovingAnts = append(newMovingAnts, ant)
+			if !ant.Finished && ant.Step < len(ant.Path)-1 {
+				nextRoom := ant.Path[ant.Step+1]
+				if nextRoom.IsEnd || !occupied[nextRoom.Name] {
+					ant.Step++
+					moveLine += fmt.Sprintf("L%d-%s ", ant.ID, ant.Path[ant.Step].Name)
+					if nextRoom.IsEnd {
+						ant.Finished = true
+					} else {
+						occupied[nextRoom.Name] = true
+					}
 				}
-			} else {
-				newMovingAnts = append(newMovingAnts, ant)
 			}
 		}
 
-		// 🚀 Then start NEW ants if possible (after moving)
+		// Push new ants onto the road if possible
+		newMovingAnts := []*SimAnt{}
 		for len(waitingAnts) > 0 {
 			nextRoom := waitingAnts[0].Path[1]
 			if !occupied[nextRoom.Name] || nextRoom.IsEnd {
@@ -108,17 +95,20 @@ func SimulateAntsSmart(farm *models.AntFarm, paths []*models.Path) {
 
 				ant.Step = 1
 				moveLine += fmt.Sprintf("L%d-%s ", ant.ID, nextRoom.Name)
-				if nextRoom.IsEnd {
-					ant.Finished = true
-				} else {
+				if !nextRoom.IsEnd {
 					occupied[nextRoom.Name] = true
 					newMovingAnts = append(newMovingAnts, ant)
 				}
 			} else {
-				break // cannot start more ants now
+				break // Cannot push more ants this turn
 			}
 		}
 
+		for _, ant := range movingAnts {
+			if !ant.Finished {
+				newMovingAnts = append(newMovingAnts, ant)
+			}
+		}
 		movingAnts = newMovingAnts
 
 		if moveLine != "" {
@@ -130,3 +120,4 @@ func SimulateAntsSmart(farm *models.AntFarm, paths []*models.Path) {
 		}
 	}
 }
+

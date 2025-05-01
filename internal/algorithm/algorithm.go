@@ -147,3 +147,52 @@ func FindBestGroup(antCount int, allPaths []*models.Path) []*models.Path {
 
 	return bestGroup
 }
+
+// Find shortest path using BFS
+func findShortestPath(farm *models.AntFarm) []*models.Room {
+	type state struct {
+		Room *models.Room
+		Path []*models.Room
+	}
+	visited := make(map[string]bool)
+	queue := []state{{farm.StartRoom, []*models.Room{farm.StartRoom}}}
+
+	for len(queue) > 0 {
+		current := queue[0]
+		queue = queue[1:]
+
+		if current.Room == farm.EndRoom {
+			return current.Path
+		}
+
+		for _, neighbor := range current.Room.Connections {
+			if visited[neighbor.Name] || roomInPath(current.Path, neighbor) {
+				continue
+			}
+			visited[neighbor.Name] = true
+			newPath := append([]*models.Room{}, current.Path...)
+			newPath = append(newPath, neighbor)
+			queue = append(queue, state{neighbor, newPath})
+		}
+	}
+	return nil
+}
+
+// Find up to maxPaths disjoint paths
+func FindKDisjointPaths(farm *models.AntFarm, maxPaths int) []*models.Path {
+	var result []*models.Path
+
+	for i := 0; i < maxPaths; i++ {
+		path := findShortestPath(farm)
+		if path == nil {
+			break
+		}
+		// Remove intermediate rooms from graph to ensure disjoint paths
+		for _, room := range path[1 : len(path)-1] {
+			delete(farm.Rooms, room.Name)
+		}
+		result = append(result, &models.Path{Rooms: path, Length: len(path)})
+	}
+
+	return result
+}

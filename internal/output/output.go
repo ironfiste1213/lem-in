@@ -22,18 +22,20 @@ func assignAntsSmart(farm *models.AntFarm, paths []*models.Path) []*SimAnt {
 	antsPerPath := make([]int, len(paths))
 	remainingAnts := farm.AntCount
 
-	for {
-		progress := false
-		for i := 0; i < len(paths); i++ {
-			if remainingAnts > 0 {
-				antsPerPath[i]++
-				remainingAnts--
-				progress = true
+	// Assign ants to paths based on minimal cost (path length + number of ants already assigned)
+	for remainingAnts > 0 {
+		bestIdx := 0
+		minCost := antsPerPath[0] + paths[0].Length
+
+		for i := 1; i < len(paths); i++ {
+			cost := antsPerPath[i] + paths[i].Length
+			if cost < minCost {
+				minCost = cost
+				bestIdx = i
 			}
 		}
-		if !progress {
-			break
-		}
+		antsPerPath[bestIdx]++
+		remainingAnts--
 	}
 
 	ants := make([]*SimAnt, 0, farm.AntCount)
@@ -85,14 +87,12 @@ func SimulateAntsSmart(farm *models.AntFarm, paths []*models.Path) {
 			}
 		}
 
-		// Push new ants onto the road if possible
+		// Push as many waiting ants as possible this turn
 		newMovingAnts := []*SimAnt{}
-		for len(waitingAnts) > 0 {
-			nextRoom := waitingAnts[0].Path[1]
+		remaining := []*SimAnt{}
+		for _, ant := range waitingAnts {
+			nextRoom := ant.Path[1]
 			if !occupied[nextRoom.Name] || nextRoom.IsEnd {
-				ant := waitingAnts[0]
-				waitingAnts = waitingAnts[1:]
-
 				ant.Step = 1
 				moveLine += fmt.Sprintf("L%d-%s ", ant.ID, nextRoom.Name)
 				if !nextRoom.IsEnd {
@@ -100,9 +100,10 @@ func SimulateAntsSmart(farm *models.AntFarm, paths []*models.Path) {
 					newMovingAnts = append(newMovingAnts, ant)
 				}
 			} else {
-				break // Cannot push more ants this turn
+				remaining = append(remaining, ant)
 			}
 		}
+		waitingAnts = remaining
 
 		for _, ant := range movingAnts {
 			if !ant.Finished {
@@ -120,4 +121,3 @@ func SimulateAntsSmart(farm *models.AntFarm, paths []*models.Path) {
 		}
 	}
 }
-
